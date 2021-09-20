@@ -18,5 +18,5 @@ An ultra-simple Linux distribution for popular single-board computers.
 - Development Environment(remote connect) : Jupyter Lab / VS Code (support c/c++/python3)
 
 **Option**
-- GUI version: only openbox
+- GUI: only openbox
 - etc
