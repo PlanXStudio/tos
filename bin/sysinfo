@@ -1,0 +1,26 @@
+#!/bin/bash
+
+freq_icon='⚡'
+temp_icons=""
+temp_unit=''
+arm_icon=''
+
+cpu_freq=$(echo $freq_icon $(bc -l <<< "scale=1;`vcgencmd measure_clock arm | cut -f2 -d$'='` / 1000 / 1000 / 1000.0") GHz)
+
+cpu_temp=`vcgencmd measure_temp | cut -f2 -d$'=' | cut -f1 -d$'\''`
+if [[ `echo "$cpu_temp <= 38" | bc` -eq 1 ]]; then
+  icon=${temp_icons:(-1)}
+elif [[ `echo "$cpu_temp <= 48" | bc` -eq 1 ]]; then
+  icon=${temp_icons:(-2):1}
+elif [[ `echo "$cpu_temp <= 58" | bc` -eq 1 ]]; then
+  icon=${temp_icons:2:1}
+elif [[ `echo "$cpu_temp <= 68" | bc` -eq 1 ]]; then
+  icon=${temp_icons:1:1}
+else
+  icon=${temp_icons:0:1}
+fi
+cpu_temp=$(echo $icon $cpu_temp $temp_unit)
+
+arm_mem=$(echo $arm_icon $(bc -l <<< "scale=1;`free | grep -e '^Mem:' | awk '{print $4}'` / 1024 /1024") Gi)
+
+echo $cpu_freq $cpu_temp $arm_mem

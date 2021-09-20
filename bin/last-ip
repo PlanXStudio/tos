@@ -1,0 +1,24 @@
+#!/bin/bash
+
+wire=''
+wireless='索'
+
+icon=$wire
+ip=`ifconfig eth0 | grep "inet\b" | awk '{print $2}' | cut -d' ' -f1`
+
+if [ "$ip" == "" ]; then
+
+    ip=`ifconfig wlan0 | grep "inet\b" | awk '{print $2}' | cut -d' ' -f1`
+
+    if [ "$ip" == "" ]; then
+        ip=`ifconfig usb0 | grep "inet\b" | awk '{print $2}' | cut -d' ' -f1`
+
+        if [ "$ip" == "" ]; then
+            ip=`ifconfig eth0:0 | grep "inet\b" | awk '{print $2}' | cut -d' ' -f1`
+        fi
+    else
+        icon=$wireless
+    fi
+fi
+
+echo $icon $ip
