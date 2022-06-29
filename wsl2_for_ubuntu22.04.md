@@ -93,5 +93,9 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
   
 > sudo git clone --depth 1 -b linux-msft-wsl-${KERVER} https://github.com/microsoft/WSL2-Linux-Kernel.git ${KERVER}-microsoft-standard
 > cd ${KERVER}-microsoft-standard
-  
+
+> make KCONFIG_CONFIG=Microsoft/config-wsl menuconfig
+  - Select Device Drivers -> Enable Multimedia support
+  - Select Multimedia support -> Media Drivers: Enable Media USB Adapters
+  - Select Media USB Adapters: Enable USB Video Class (UVC)
 ```  
