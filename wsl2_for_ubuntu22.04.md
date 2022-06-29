@@ -87,7 +87,11 @@ Bus 001 Device 003: ID 0955:7e19 NVIDIA Corp. APX
 Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 ```
 
-# How to Install Firefox 
+# USB Camera with Kernel Build
 ```shell
+> KERVER=$(uname -r -v | cut -d '-' -f1) 
+  
+> sudo git clone --depth 1 -b linux-msft-wsl-${KERVER} https://github.com/microsoft/WSL2-Linux-Kernel.git ${KERVER}-microsoft-standard
+> cd ${KERVER}-microsoft-standard
   
 ```  
