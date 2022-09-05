@@ -87,15 +87,36 @@ Bus 001 Device 003: ID 0955:7e19 NVIDIA Corp. APX
 Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 ```
 
-# USB Camera with Kernel Build
+# USB Camera & CAN with Kernel Build
+```shell
+> sudo apt install git bc build-essential flex bison libssl-dev libelf-dev libncurses-dev
+```
+  
 ```shell
 > KERVER=$(uname -r -v | cut -d '-' -f1) 
   
-> sudo git clone --depth 1 -b linux-msft-wsl-${KERVER} https://github.com/microsoft/WSL2-Linux-Kernel.git ${KERVER}-microsoft-standard
+> git clone --depth 1 -b linux-msft-wsl-${KERVER} https://github.com/microsoft/WSL2-Linux-Kernel.git ${KERVER}-microsoft-standard
 > cd ${KERVER}-microsoft-standard
 
-> make KCONFIG_CONFIG=Microsoft/config-wsl menuconfig
-  - Select Device Drivers -> Enable Multimedia support
-  - Select Multimedia support -> Media Drivers: Enable Media USB Adapters
-  - Select Media USB Adapters: Enable USB Video Class (UVC)
+> make KCONFIG_CONFIG=Microsoft/config-wsl menuconfig (should have an '*')
+  - Device Drivers -> Enable Multimedia support
+    - Multimedia support -> Media Drivers: Enable Media USB Adapters
+      - Media USB Adapters: Enable USB Video Class (UVC)
+  - Networking support -> Enable CAN bus subsystem support
+    - Enable Raw CAN Protocol
+    - Enable Broadcast Manager
+    - Enable SAE J1939
+    - ISO 1576-2:2016 CAN transport protocol
+    - CAN Device Drivers ->
+      - Enable Virtual Local CAN Interface
+      - Enable Serial / USB serial CAN Adaptors
+      - Enable Platform CAN drivers with Netlink support
+      - Enable CAN bit-timing calculation
+      - CAN USB interfaces ->
+        - Enable Kvaser CAN/USB interface
+        - Enable Microchip CAN BUS Analyzer interface
+        - Enable PEAK PCAN-USB/USB Pro interfaces for CAN 2.0b/CAN-FD
+  
+> make -j8
+  
 ```  
