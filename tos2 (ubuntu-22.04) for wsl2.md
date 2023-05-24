@@ -1,39 +1,68 @@
 # WinGet
-> Document (https://learn.microsoft.com/en-us/windows/package-manager/winget/)
-> github (https://github.com/microsoft/winget-cli)
+> Documentation (https://learn.microsoft.com/en-us/windows/package-manager/winget/)
+> GitHub (https://github.com/microsoft/winget-cli)
 
-- Command Line or PowerShell Run at Administrator
+- Command Line Run at Administrator
+  - Check the packages currently installed on your PC
+    ```sh
+    winget list PowerShell
+    winget list WindowsTerminal
+    ```
+  - Korean
+    ```sh
+    winget list "Linux용 Windows 하위 시스템"
+    ```
 
-```sh
-winget list PowerShell
-winget list WindowsTerminal
-winget list "Windows Subsystem for Linux"
-```
+  - English
+    ```
+    winget list "Windows Subsystem for Linux" 
+    ```
 
-# Change PowerShell to V7.x from V2.0\
-> PowerShell Documentation (https://learn.microsoft.com/en-us/powershell/)  
-> GitHub (https://github.com/PowerShell/PowerShell)
-- Search > 윈도우 기능 켜기/끄기(kor) or Turn windows Features on or off(eng)
+# PowerShell
+> Documentation (https://learn.microsoft.com/en-us/powershell/)  
+> GitHub (https://github.com/PowerShell/PowerShell)  
+
+- Remove Old Version
+  - Search > <윈도우 기능 켜기/끄기(Korean) | Turn windows Features on or off(English)>
   - Window PowerShell 2.0 [Unckecked]
-- https://github.com/PowerShell/PowerShell
-  - Windows (x64) | Downloads (LTS)
-  - install
+
+- Install New Version
+  ```
+  winget install --id Microsoft.PowerShell
+  ```
 
 # Window Terminal 
-> Install and get started setting up (https://learn.microsoft.com/en-us/windows/terminal/install)  
-> GitHub (https://github.com/microsoft/terminal)
-- WinGet (Command line or PowerShell at Administrator)
+> Documentation (https://learn.microsoft.com/en-us/windows/terminal/install)  
+> GitHub (https://github.com/microsoft/terminal)  
+
+- Install Preview Version
 ```sh
 winget install --id Microsoft.WindowsTerminal.Preview
 ```
-- Microsoft Store
-  - Search > Windows Terminal Preview
-  - install
-- Run > Setting
-  - Start > Default Profile > PowerShell 
-    - Save
 
-# WSL2 Install or upgrade
+# WSL
+> Documentation (https://learn.microsoft.com/en-us/windows/wsl)  
+> GitHub (https://github.com/microsoft/WSL)  
+>> Linux-Kernel (https://github.com/microsoft/WSL2-Linux-Kernel)  
+
+- Update
+```
+wsl --update
+```
+
+- Run when **wsl command not found**
+  - Korean
+    ```sh
+    winget list "Linux용 Windows 하위 시스템"
+    ```
+
+  - English
+    ```
+    winget list "Windows Subsystem for Linux" 
+    ```
+
+## 
+# WSL Ubuntu
 - PowerShell
 ```shell
 wsl --install
