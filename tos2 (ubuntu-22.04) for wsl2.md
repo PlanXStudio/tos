@@ -5,16 +5,13 @@
 - Command Line Run at Administrator
   - Check the packages currently installed on your PC
     ```sh
-    winget list PowerShell
-    winget list WindowsTerminal
-    ```
-  - Korean
-    ```sh
-    winget list "Linux용 Windows 하위 시스템"
-    ```
+    winget search Microsoft.PowerShell
+    winget list Microsoft.PowerShell
+    
+    winget search Microsoft.WindowsTerminal
+    winget list Microsoft.WindowsTerminal
 
-  - English
-    ```
+    winget search "Windows Subsystem for Linux" 
     winget list "Windows Subsystem for Linux" 
     ```
 
@@ -29,16 +26,33 @@
 - Install New Version
   ```
   winget install --id Microsoft.PowerShell
+  winget install oh-my-posh
   ```
 
+# OhMyPosh (for PowrShell)
+> Documentation (https://ohmyposh.dev/docs/installation/windows)  
+- Install
+  ```sh
+  winget install JanDeDobbeleer.OhMyPosh -s winget
+  ```
+- Font Append
+  > Nerd Fonts (https://www.nerdfonts.com/)
+  
+- Themes
+  > Themes (https://ohmyposh.dev/docs/themes)
+  ```sh
+  Get-PoshThemes
+  oh-my-posh init pwsh --config 'C:\Users\<home folder>\AppData\Local\Programs\oh-my-posh\themes\<theme name>.omp.json' | Invoke-Expression
+  ```
+  
 # Window Terminal 
 > Documentation (https://learn.microsoft.com/en-us/windows/terminal/install)  
 > GitHub (https://github.com/microsoft/terminal)  
 
 - Install Preview Version
-```sh
-winget install --id Microsoft.WindowsTerminal.Preview
-```
+  ```sh
+  winget install --id Microsoft.WindowsTerminal.Preview
+  ```
 
 # WSL
 > Documentation (https://learn.microsoft.com/en-us/windows/wsl)  
@@ -46,20 +60,14 @@ winget install --id Microsoft.WindowsTerminal.Preview
 >> Linux-Kernel (https://github.com/microsoft/WSL2-Linux-Kernel)  
 
 - Update
-```
-wsl --update
-```
+  ```
+  wsl --update
+  ```
 
 - Run when **wsl command not found**
-  - Korean
-    ```sh
-    winget list "Linux용 Windows 하위 시스템"
-    ```
-
-  - English
-    ```
-    winget list "Windows Subsystem for Linux" 
-    ```
+  ```sh
+  winget install "Windows Subsystem for Linux" 
+  ```
 
 ## 
 # WSL Ubuntu
