@@ -43,6 +43,7 @@
   ```sh
   Get-PoshThemes
   oh-my-posh init pwsh --config 'C:\Users\<home folder>\AppData\Local\Programs\oh-my-posh\themes\<theme name>.omp.json' | Invoke-Expression
+  notepad $PROFILE
   ```
   
 # Window Terminal 
