@@ -1,11 +1,31 @@
-# Change PowerShell to V7.x from V2.0
-- Search > Turn windows Features on or off
-  - Disable Window PowerShell 2.0
+# WinGet
+> Document (https://learn.microsoft.com/en-us/windows/package-manager/winget/)
+> github (https://github.com/microsoft/winget-cli)
+
+- Command Line or PowerShell Run at Administrator
+
+```sh
+winget list PowerShell
+winget list WindowsTerminal
+winget list "Windows Subsystem for Linux"
+```
+
+# Change PowerShell to V7.x from V2.0\
+> PowerShell Documentation (https://learn.microsoft.com/en-us/powershell/)  
+> GitHub (https://github.com/PowerShell/PowerShell)
+- Search > 윈도우 기능 켜기/끄기(kor) or Turn windows Features on or off(eng)
+  - Window PowerShell 2.0 [Unckecked]
 - https://github.com/PowerShell/PowerShell
   - Windows (x64) | Downloads (LTS)
   - install
 
-# Window Terminal (https://github.com/microsoft/terminal)
+# Window Terminal 
+> Install and get started setting up (https://learn.microsoft.com/en-us/windows/terminal/install)  
+> GitHub (https://github.com/microsoft/terminal)
+- WinGet (Command line or PowerShell at Administrator)
+```sh
+winget install --id Microsoft.WindowsTerminal.Preview
+```
 - Microsoft Store
   - Search > Windows Terminal Preview
   - install
