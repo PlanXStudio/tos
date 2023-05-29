@@ -1,34 +1,41 @@
-# WinGet
-> Documentation (https://learn.microsoft.com/en-us/windows/package-manager/winget/)
+# Before start
+- **Command Line Run at Administrator**
+
+## WinGet
+> Documentation (https://learn.microsoft.com/en-us/windows/package-manager/winget/)  
 > GitHub (https://github.com/microsoft/winget-cli)
 
-- Command Line Run at Administrator
-  - Check the packages currently installed on your PC
-    ```sh
-    winget search Microsoft.PowerShell
-    winget list Microsoft.PowerShell
-    
-    winget search Microsoft.WindowsTerminal
-    winget list Microsoft.WindowsTerminal
+- Check the packages currently installed on your PC
+  ```sh
+  winget list Microsoft.PowerShell
+  winget list Microsoft.WindowsTerminal
+  winget list "Windows Subsystem for Linux" 
+  ```
+- Find a package in the package repository  
+  ```sh
+  winget search Microsoft.PowerShell
+  winget search Microsoft.WindowsTerminal
+  winget search "Windows Subsystem for Linux" 
+  ```
 
-    winget search "Windows Subsystem for Linux" 
-    winget list "Windows Subsystem for Linux" 
-    ```
-
-# PowerShell
+## PowerShell
 > Documentation (https://learn.microsoft.com/en-us/powershell/)  
 > GitHub (https://github.com/PowerShell/PowerShell)  
 
 - Remove Old Version
-  - Search > <윈도우 기능 켜기/끄기(Korean) | Turn windows Features on or off(English)>
-  - Window PowerShell 2.0 [Unckecked]
+  - Korean
+    - Search > 윈도우 기능 켜기/끄기
+  - English
+    - Search > Turn windows Features on or off
+  - Unchecked
+    - Window PowerShell 2.0  
 
 - Install New Version (Preview)
   ```
   winget install Microsoft.PowerShell.Preview
   ```
 
-# Window Terminal 
+## Window Terminal 
 > Documentation (https://learn.microsoft.com/en-us/windows/terminal/install)  
 > GitHub (https://github.com/microsoft/terminal)  
 
@@ -42,22 +49,44 @@
   - Unzip Meslo.zip and Install
 
 - Settings (Ctrl + ,)
-  - 시작
-    - 기본 프로필 > PowerShell
-    - 기본 터미널 응용 프로그램 > Windows 터미널 미리 보기
-  - 색 구성표 > Tango Dark > 기본값으로 설정
-  - 프로필 > 기본값 
-    - 모양
-      - 글꼴 > LesloLGS Nerd Font
-      - 투명성 > 배경 불투명도 > 90%
-    - 고급
-      - 프로필 종료 동작 > 프로세스가 종료, 실패 또는 충돌 시 닫기
-  - 저장
-   
-# OhMyPosh (PowerShell Theme)
+  - Korean
+    ```sh
+    시작 >
+      기본 프로필 > PowerShell
+      기본 터미널 응용 프로그램 > Windows 터미널 미리 보기
+    색 구성표 > 
+      Tango Dark > 기본값으로 설정
+    프로필 > 
+      기본값 > 추가 설정
+        모양 >
+          글꼴 > LesloLGS Nerd Font
+          투명성 > 배경 불투명도 > 90%
+        고급 >
+          프로필 종료 동작 > 프로세스가 종료, 실패 또는 충돌 시 닫기
+    저장
+    ```
+  - English
+    ```sh
+    Startup >
+      Default profile > PowerShell
+      Default terminal application > Windows Terminal Preview
+    color schemes > 
+      Tango Dark > Set as default
+    Profiles > 
+      Defaults > Additional settings
+        Appearance >
+          Font face > LesloLGS Nerd Font
+          Transparency > Background opacity > 90%
+        Advanced >
+          Profile termination behavior > Close when precess exits, fails, or crashes
+    Save
+    ```
+
+## OhMyPosh (PowerShell Theme)
 > Documentation (https://ohmyposh.dev/docs/installation/windows)  
 
-- Run WindowsTerminal > PowerShell at Administrator
+- Run WindowsTerminal 
+  - Open a new tab > `<Ctrl>` + PowerShell 
   ```sh
   winget install JanDeDobbeleer.OhMyPosh -s winget
   ```
