@@ -115,7 +115,7 @@ Plugin 'frazrepo/vim-rainbow'
 Plugin 'Yggdroot/indentLine'
 Plugin 'preservim/nerdtree'
 
-call vundle#end('/etc/vim/bundle')
+call vundle#end()
 filetype plugin indent on
 
 "---------------------------------------------------------------
