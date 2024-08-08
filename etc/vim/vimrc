@@ -1,0 +1,169 @@
+"Color
+set termguicolors
+
+"Normal
+syntax enable
+set history=256
+set number
+set ruler
+set laststatus=2
+set statusline=\ %<%l:%v\ [%P]%=%a\ %h%m%r\ %F\
+set scrolloff=3
+set wildmenu
+set wildmode=longest,list
+set bs=eol,start,indent
+set incsearch
+set showmatch
+set relativenumber
+
+"Backup
+set nobackup
+set noswapfile
+set nowritebackup
+
+"Indent
+set smartindent
+set expandtab
+set tabstop=4
+set shiftwidth=4
+
+"Search
+set ignorecase
+set smartcase
+set hlsearch
+set wrapscan
+
+"File work
+set autowrite
+set autoread
+set fileencoding=utf-8
+
+"Remove trailing whitespace on save
+autocmd BufWritePre * :%s/\s\+$//e
+
+"ISSUES:7094. Printing `[2 q` in command prompt
+set guicursor=
+
+"Split
+set splitbelow
+set splitright
+nnoremap <C-J> <C-W><C-J>   "<Ctrl>J: Down
+nnoremap <C-K> <C-W><C-K>   "<Ctrl>K: Up
+nnoremap <C-L> <C-W><C-L>   "<Ctrl>L: Right
+nnoremap <C-H> <C-W><C-H>   "<Ctrl>H: Left
+
+"Terminal
+let g:terminal_scrollback_buffer_size = 100000
+tnoremap <Esc> <C-\><C-n>
+tnoremap <expr> <C-R> '<C-\><C-N>"'.nr2char(getchar()).'pi'
+
+"Navigation Key (`ALT+{h,j,k,l}`)
+tnoremap <A-h> <C-\><C-N><C-w>h
+tnoremap <A-j> <C-\><C-N><C-w>j
+tnoremap <A-k> <C-\><C-N><C-w>k
+tnoremap <A-l> <C-\><C-N><C-w>l
+inoremap <A-h> <C-\><C-N><C-w>h
+inoremap <A-j> <C-\><C-N><C-w>j
+inoremap <A-k> <C-\><C-N><C-w>k
+inoremap <A-l> <C-\><C-N><C-w>l
+nnoremap <A-h> <C-w>h
+nnoremap <A-j> <C-w>j
+nnoremap <A-k> <C-w>k
+nnoremap <A-l> <C-w>l
+
+"Python Run & Debugging
+autocmd FileType python map <buffer> <C-F5> :w<CR>:exec '!python3' shellescape(@%, 1)<CR>
+autocmd FileType python imap <buffer> <C-F5> <esc>:w<CR>:exec '!python3' shellescape(@%, 1)<CR>
+
+func! s:SetBreakpoint()
+    cal append('.', repeat(' ', strlen(matchstr(getline('.'), '^\s*'))) . 'import ipdb; ipdb.set_trace()')
+endf
+
+func! s:RemoveBreakpoint()
+    exe 'silent! g/^\s*import\sipdb\;\?\n*\s*ipdb.set_trace()/d'
+endf
+
+func! s:ToggleBreakpoint()
+    if getline('.')=~#'^\s*import\sipdb'
+       cal s:RemoveBreakpoint()
+    else
+       cal s:SetBreakpoint()
+    endif
+endf
+nnoremap <F6> :call <SID>ToggleBreakpoint()<CR>
+
+
+"---------------------------------------------------------------
+"Plugin
+"---------------------------------------------------------------
+"Vundle
+set nocompatible
+filetype off
+
+set rtp+=/etc/vim/bundle/Vundle.vim
+call vundle#begin('/etc/vim/bundle')
+
+Plugin 'VundleVim/Vundle.vim'
+
+Plugin 'morhetz/gruvbox'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'tmhedberg/SimpylFold'
+Plugin 'terryma/vim-multiple-cursors'
+Plugin 'Raimondi/delimitMate'
+Plugin 'frazrepo/vim-rainbow'
+Plugin 'Yggdroot/indentLine'
+Plugin 'preservim/nerdtree'
+
+call vundle#end('/etc/vim/bundle')
+filetype plugin indent on
+
+"---------------------------------------------------------------
+"Configure
+"---------------------------------------------------------------
+
+"gruvbox
+let g:gruvbox_contrast_dark="hard"
+set background=dark
+autocmd vimenter * colorscheme gruvbox
+
+"vim-airline
+"tab ------------------------------
+"let g:airline#extensions#tabline#enabled=1
+"let g:airline#extensions#tabline#show_tab_nr=0
+"let g:airline#extensions#tabline#show_tab_type=0
+"let g:airline#extensions#tabline#formatter='unique_tail'
+"let g:airline#extensions#tabline#left_sep=' '
+"let g:airline#extensions#tabline#left_alt_sep='|'
+"tab ------------------------------
+let g:airline_powerline_fonts=1
+let g:airline#extensions#whitespace#enabled=0
+
+"vim-airline-themes
+"AirlineTheme {'powerlineish', 'solarized', 'luna', 'wombat'}
+"let g:airline_theme='wombat' "lazy load issue
+"--> ~/.vim/bundle/vim-airline/plugin/airline.vim:43
+let g:airline_solarized_bg='light'
+
+"SimpylFold
+set foldmethod=indent
+set foldlevel=99
+nnoremap <space> za
+let g:SimpylFold_docstring_preview=1
+
+"vim-multiple-cursors
+let g:multi_cursor_use_default_mapping=0
+let g:multi_cursor_next_key='<C-n>'
+let g:multi_cursor_prev_key='<C-p>'
+let g:multi_cursor_skip_key='<C-x>'
+let g:multi_cursor_quit_key='<Esc>'
+
+"delimitMate
+let delimitMate_expand_cr=1
+
+"vim-rainbow
+"au FileType c,cpp,objc,objcpp call rainbow#load()
+let g:rainbow_active=1
+
+"indentLine
+let g:indentLine_char_list=['|', '¦', '┆', '┊']
