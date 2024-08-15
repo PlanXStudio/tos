@@ -1,4 +1,4 @@
-# python3.11 update
+# python3.13 update
 ```sh
-mamba install python=3.11 mamba
+mamba install python=3.13 mamba
 ```
