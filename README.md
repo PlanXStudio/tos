@@ -3,20 +3,16 @@ An ultra-simple Linux distribution for popular single-board computers.
  
 ## Target
 - Single-board Computer (only aarch64)
-  - Raspberry Pi 4 (Debian 11)
-  - Xavier NX (Ubuntu 20.04)
+  - Raspberry Pi 4/5
+  - Jetson Nano/Xavier NX/Orin NX
 
 ## Contents
 **Base**
-- Shell: zsh, oh-my-zsh, tmux
-- Language: gcc10, python3.9
-- Editor: vim8.2
-- Tools: fzf, fd, bat, lsd, hexyl etc
+- Shell: zsh, oh-my-zsh, powerlevel10k, tmux
+- GUI: Xorg, openbox
+- Language: python3.8 up
+- Editor: vim, VS Code(remote)
+- Tools: fzf, fd, bat, eax, hexyl etc
 - Data Science for python3: numpy, pandas, matplotlib
 - IoT Connectivity: mqtt, bluez, blynk
 - Hardware Interface: GPIO, I2C, SPI, UART, CAN
-- Development Environment(remote connect) : Jupyter Lab / VS Code (support c/c++/python3)
-
-**Option**
-- GUI: only openbox
-- etc
