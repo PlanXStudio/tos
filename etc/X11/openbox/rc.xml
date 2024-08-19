@@ -15,7 +15,7 @@
   <placement>
     <policy>Smart</policy>
     <center>yes</center>
-    <monitor>Primary</monitor>
+    <monitor>SerBot</monitor>
     <primaryMonitor>1</primaryMonitor>
   </placement>
   <theme>
