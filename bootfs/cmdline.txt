@@ -1,0 +1,1 @@
+console=tty1 root=PARTUUID=458bb330-02 rootfstype=ext4 logo.nologo vt.global_cursor_default=0 plymouth.ignore-serial-consoles fsck.repair=yes modules-load=dwc2,g_ether rootwait ip=192.168.101.101
