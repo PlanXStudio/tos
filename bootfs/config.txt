@@ -1,0 +1,32 @@
+# Tos for RPi4
+
+# set aarch64(arm64)
+arm_64bit=1
+
+# set performance
+over_voltage=3
+arm_freq=1850
+
+# enable drm vc4 v3d driver
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+
+# enable camera
+start_x=1
+gpu_mem=128
+
+# enable I2C
+dtparam=i2c_arm=on,i2c_arm_baudrate=1000000
+
+# enable spi
+dtparam=spi=on
+
+# enable usb otg
+dtoverlay=dwc2
+
+# disable splash mark
+disable_splash=1
+
+# disable low power mark
+avoid_warnings=1
+
