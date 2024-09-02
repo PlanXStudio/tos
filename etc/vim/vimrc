@@ -54,7 +54,6 @@ nnoremap <C-H> <C-W><C-H>   "<Ctrl>H: Left
 
 "Terminal
 let g:terminal_scrollback_buffer_size = 100000
-tnoremap <Esc> <C-\><C-n>
 tnoremap <expr> <C-R> '<C-\><C-N>"'.nr2char(getchar()).'pi'
 
 "Navigation Key (`ALT+{h,j,k,l}`)
