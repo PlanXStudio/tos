@@ -29,6 +29,8 @@ boot에 포함된 핵심 파일의 의미입니다.
 winget install --id GNU.Wget2
 
 cd D:
+del cmdline.txt
+del config.txt
 
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/cmdline.txt
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/config.txt
