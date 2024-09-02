@@ -23,23 +23,33 @@ boot에 포함된 핵심 파일의 의미입니다.
 - fixup.dat: GPU 펌웨어 패치 파일로, 특정 하드웨어 문제를 해결하거나 기능을 추가하기 위해 사용
 - overlays: 장치 트리 오버레이 파일들을 저장하는 디렉터리. 특정 하드웨어 기능을 활성화하거나 설정을 변경하기 위해 사용
 
-1. T-Flash 카드에 부트 이미지를 설치한 후 /boot 경로에서 다음 명령을 실행합니다.
+다음과 같이 윈도우 PC의 파워쉘에서 부트 파일 시스템의 설정 파일을 수정합니다.
 
+1. 윈도우용 wget을 설치합니다.
 ```sh
 winget install --id GNU.Wget2
+```
 
+2. T-Flash의 부트 파일 시스템 경로(D:)로 이동해 기존 설정 파일을 삭제합니다.
+```sh
 cd D:
 del cmdline.txt
 del config.txt
+```
 
+3. 새로운 설정 파일을 다운로드 합니다.
+```sh
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/cmdline.txt
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/config.txt
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/userconf.txt
-
-echo "" > ssh
 ```
 
-2. T-Flash 카드를 rpi에 삽입한 후 전원을 공급해 부팅합니다.
+4. SSH 서버 실행을 위해 새 파일을 만듦니다.
+```
+New-Item -ItemType File -Path ssh
+```
+
+5. T-Flash 카드를 rpi에 삽입한 후 전원을 공급해 부팅합니다.
 
 ## SSH 키 생성
 SSH 통신에 필요한 비대칭 키를 생성한 후 하나(private)는 PC, 나머지(public)는 rpi에 복사하면 PC에서 rpi에 원격 접속할 때 fingerprint 생성과 패스워드 요구를 생략합니다.
