@@ -190,6 +190,7 @@ echo "Package Cleaning"
 echo "===================="
 
 apt purge -y ${PKG_LIST}
+find /lib/modules -maxdepth 1 -type d -not -name `uname -r` -exec apt purge -y {} +
 apt autoremove
 
 echo "==================="
@@ -371,6 +372,101 @@ PluginInstall
 - Python 파일을 편집할 때 \<Ctrl>+\<F5>를 눌러 현재 파일 저장, 실행
 </details>
 
+## 관리자(root) 원격 접속 허용
+
+1. root 패스워드(#tos!) 설정합니다.
+```sh
+yes '#tos!' | sudo passwd root
+```
+
+2./etc/ssh/sshd_config 파일에서 root 로그인을 허용합니다.
+```sh
+sudo sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config
+```
+
+3. SSH 서버를 재시작합니다.
+```sh
+sudo systemctl restart ssh.service
+``` 
+
+## CPU 스케일링 및 LED 부팅 완료 설정 
+CPU governor는 CPU 주파수를 어떤 방식으로 조절할지 결정하는 알고리즘 또는 정책입니다. 각 governor는 다음과 같이  성능, 전력 소비, 반응 속도 등에 대한 다른 특성을 가지고 있습니다.
+- performance: CPU를 항상 최대 주파수로 동작시킵니다. 최고의 성능을 제공하지만 전력 소비가 높습니다.
+- powersave: CPU를 항상 최저 주파수로 동작시킵니다. 전력 소비를 최소화하지만 성능이 낮습니다.
+- userspace: 사용자가 직접 CPU 주파수를 설정할 수 있도록 허용합니다.
+- ondemand: CPU 사용량에 따라 주파수를 동적으로 조절합니다. 균형 잡힌 성능과 전력 소비를 제공합니다.
+- conservative: ondemand와 비슷하지만 주파수 변경이 더 느리게 이루어집니다.
+
+또한 rpi는 sysfs를 통해 녹색 플래시 카드 R/W LED(led0 or ACT)와 빨간색 파워 LED(led1 or PWR)에 대한 사용자 정의가 가능합니다. 
+
+1. /etc/rc.local 파일의 마지막 줄(exit 0)을 삭제합니다.
+```sh
+sudo sed '$ d' /etc/rc.local -i
+```
+
+2. /etc/rc.local에 CPU 스케일링 및 LED 부팅 완료 설정을 추가합니다.
+```sh
+echo -e "echo performance | tee /sys/devices/system/cpu/cpufreq/policy0/scaling_governor\necho none > /sys/class/leds/ACT/trigger\necho 255 > /sys/class/leds/ACT/brightness\n\nexit 0" | sudo tee -a /etc/rc.local > /dev/null
+```  
+
+3. rpi를 다시 시작하면, 녹색 LED가 깜빡이지 않고 켜짐 상태를 유지합니다.
+```sh
+sudo reboot
+```
+
+## 메모리 스와핑 변경
+메모리 스와핑은 자주 사용되지 않는 부분을 플래시 카드의 파일에 일시적으로 배치하여(dphys-swap) 작업 메모리를 늘립니다. 하지만 플래시 카드로 메모리에 로드할 데이터를 전송하는 것은 매우 느린 메커니즘입니다. 또한 플래시 카드가 견딜 수 있는 쓰기 횟수가 제한되어 빠르게 손상될 수 있습니다.
+메모리 스와핑 문제를 해결하기 위해 zram을 사용합니다. zram은 메모리의 일부를 플래시 카드에 쓰는 대신 zip 파일로 압축하여 결과를 다시 RAM에 저장합니다. 압축된 데이터 크기와 원래 크기의 차이는 해제되는 메모리 양입니다. 번거롭게 들릴 수 있지만 실제로는 플래시 메모리에 쓰는 것보다 훨씬 빠른 메커니즘입니다. 단점은 더 큰 압축 파일을 저장할 공간이 없을 때의 RAM 크기입니다. 반면 원래 dphys-swap 파일은 2GB 플래시 메모리로 제한됩니다.
+
+1. zram-tools을 설치합니다.
+```sh
+sudo apt install zram-tools
+```
+
+2. 기존 플래시 카드의 스왑 파일을 제거합니다.
+```sh
+sudo /etc/init.d/dphys-swapfile stop
+sudo apt purge dphys-swapfile
+sudo rm /var/swap
+```
+
+3. 결과를 확인합니다.
+```sh
+cat /proc/swaps
+```
+```out
+Filename                                Type            Size            Used            Priority
+/dev/zram0                              partition       262140          0               100
+```
+
+4. 만약 ZRAM 설정을 변경하려면 /etc/default/zramswap을 수정합니다.
+
+5. ZRAM을 더 잘 활용하기 위해 vi로 /etc/sysctl.conf를 열고 끝에 다음 내용을 추가해 커널 매개변수를 수정합니다. 
+```sh
+vm.vfs_cache_pressure=500
+vm.swappiness=100
+vm.dirty_background_ratio=1
+vm.dirty_ratio=50
+vm.watermark_boost_factor = 0
+vm.watermark_scale_factor = 125
+vm.page-cluster = 0
+```
+
+<details>
+<summary>ZRAM 커널 매개변수</summary>
+
+- 더 높은 vm.vfs_cache_pressure 값은 시스템이 dentry와 inode에 사용된 메모리를 회수하는 데 더 공격적으로 만듭니다. 반대로, 더 낮은 값은 다른 캐시된 데이터를 희생하여 메모리에 보관하는 것을 우선시한다는 것을 의미합니다.
+- vm.swappiness 는 시스템 페이지 캐시에서 페이지를 삭제하는 것과는 달리 런타임 메모리를 스왑 아웃하는 데 주어지는 상대적 가중치를 제어하는 ​​Linux의 커널 매개변수입니다. 값이 높을수록 커널이 물리적 메모리에서 프로세스를 적극적으로 스왑 아웃하여 스왑 공간으로 옮길 것입니다.
+- vm.dirty_background_ratio 는 커널이 백그라운드에서 디스크에 쓰기 시작하기 전에 "더티" 페이지로 채울 수 있는 시스템 메모리의 백분율을 결정하는 조정 가능한 매개변수입니다. "더티" 페이지는 수정(또는 "더티")되었지만 아직 디스크의 해당 파일에 다시 쓰여지지 않은 메모리 페이지입니다. vm.dirty_background_ratio 는 백분율로 표현됩니다.
+- vm.dirty_ratio 는 백분율을 나타내는 조정 가능한 매개변수입니다. 프로세스가 이러한 페이지를 디스크에 쓰기 시작하도록 강제하기 전에 "더티" 페이지로 채울 수 있는 총 시스템 메모리(RAM)의 최대 양을 지정합니다.
+- Linux의 vm.page -cluster 커널 매개변수는 스왑 공간에서 스왑 인 또는 파일 페이지 회수 중에 단일 작업으로 디스크에서 읽거나 디스크에 쓰는 페이지 수를 제어합니다. 
+</details>
+
+6. vi를 종료한 후 새 매개변수를 활성화 합니다.
+```sh
+sudo sysctl --system
+```  
+
 # CLI 환경 개선
 리눅스는 30년이 넘는 시간 동안 꾸준히 발전해 왔습니다. 오픈소스 기반의 운영체제인 리눅스는 개방성, 유연성, 안정성을 바탕으로 서버, 임베디드 시스템, 개인용 컴퓨터 등 다양한 분야에서 널리 사용되고 있습니다. 하지만 기술의 발전과 사용자의 요구 변화에 따라 기존 리눅스 툴의 한계를 지적하는 사용자도 많습니다.
 이들의 요구사항을 수용해 최근에는 직관적인 사용자 인터페이스와 다양하고 강력한 기능 및 뛰어난 성능과 안전성을 바탕으로 한 현대적인 리눅스 툴 들이 개발되고 있습니다.
@@ -422,7 +518,12 @@ You can:
 cat /dev/null > ~/.zshrc
 ```
 
-## tmux
+6. 환경변수 PATH의 디폴트 값(/etc/zsh/zshenv)을 수정합니다.
+```sh
+sudo sed -i "s/\/usr\/local\/bin:\/usr\/bin:\/bin:\/usr\/games/\/usr\/local\/bin:\/usr\/bin:\/bin:\/usr\/local\/sbin:\/usr\/sbin:\/sbin/g" /etc/zsh/zshenv
+```
+
+### tmux
 tmux은 터미널 멀티플렉서의 일종으로 하나의 터미널 창 안에서 여러 개의 터미널 세션을 만들고 관리할 수 있게 해주는 도구입니다. 각 세션은 독립적으로 동작하며, 창 분할, 탭 기능 등을 통해 여러 작업을 동시에 효율적으로 처리할 수 있습니다.
 
 처음 tmux를 실행하면 백그라운드에서 새로운 쉘과 함께 tmux 서버가 실행되고, 사용자 쉘에는 tmux 클라이언트가 실행됩니다. 이 후 사용자가 실행한 모든 명령은 tmux 클라이언틀 통해 tmux 서버에 전달되고, tmux 서버는 이를 자신의 쉘에 전달해 실행합니다. 만약 이 과정에서 원격 연결이 끊어지면 사용자 쉘과 tmux 클라이언트만 종료되고 tmux 서버는 백그라운드에서 계속 실행되므로 tmux 세션 내의 프로그램들은 계속 실행 상태를 유지합니다.
@@ -976,3 +1077,62 @@ alias od='hexyl'
 ```sh
 source /etc/zsh/zshrc
 ```
+
+# GUI 환경 설정
+Xorg는 X Window System의 핵심 구성 요소로, 그래픽 사용자 인터페이스(GUI)를 제공하는 역할을 합니다. 사용자 입력을 받아 화면에 출력하고, 창 관리자와 통신하여 창을 관리합니다.
+
+창 관리자의 일종인 Openbox는 X 서버 위에서 동작하며, 창의 모양, 위치, 동작 등을 관리합니다. X 서버가 창을 그리고 사용자 입력을 처리하는 동안, Openbox는 창의 배치, 제목 표시줄, 테두리 등을 담당하는데, 다른 창 관리자에 비해 가볍고 빠릅니다. 즉, Xorg는 GUI 환경의 기반을 제공하고, Openbox는 그 위에서 창을 관리하는 역할을 수행합니다.
+
+GUI 응용프로그램과 OpenBox, Xorg의 역할은 다음과 같습니다.
+- 사용자가 GUI 애플리케이션을 실행하면, 해당 애플리케이션은 X 서버에 창 생성 요청
+- X 서버는 창을 생성하고, 창의 기본적인 속성(크기, 위치 등) 설정
+- Openbox는 X 서버로부터 창 생성 이벤트를 받고, 해당 창에 대한 관리 시작
+- Openbox는 X 서버를 통해 창에 제목 표시줄, 테두리, 버튼 등을 추가하여 사용자가 창을 쉽게 조작할 수 있도록 지원
+- Openbox는 X 서버를 통해 사용자의 입력에 따라 창의 위치를 변경하거나, 크기를 조절하거나, 다른 창 위에 겹쳐서 배치하는 등 창 관리 작업 수행
+- 사용자가 창을 닫으면 Openbox는 해당 창을 화면에서 제거하고, X 서버에 창 삭제 요청
+
+## X 서버 설치 및 실행 
+임베디드 장치는 창 관리자 없이 X 서버만으로도 충분합니다.
+
+1. X 서버를 설치합니다. 
+```sh
+sudo apt-get install --no-install-recommends xserver-xorg xinit
+```
+
+2. X 서버를 실행합니다.
+```sh
+sudo Xorg :0 &
+```
+
+## 원격 데스크탑 설치
+PC에서 원격으로 serbot의 GUI 환경을 사용할 때는 VNC를 비롯해 RDP등 다양한 솔루션이 있지만, 네트워크 환경에 따라 가변 압축을 지원하는 nomachine을 권장합니다.
+nomachine은 상업, 비상업 버전으로 나뉘는데, 두 버전의 기본적인 기능은 같고 비상업 버전은 세션당 한명의 사용자만 연결할 수 있습니다.
+
+1. rpi에 nomachine 서버를 설치합니다.
+```sh
+wget https://www.nomachine.com/free/arm/v8/deb -O nomachine.deb
+sudo dpkg -i nomachine.deb
+rm nomachine.deb
+```
+
+2. PC에서 nomachine 클라이언트를 설치합니다.
+```sh
+winget install NoMachine.NoMachineClient -s winget
+```
+
+3. PC에서 namachine 클라이언트를 실행한 후 rpi의 IP 주소를 이용해 원격 접속합니다.
+- Search 창에 serbot IP 주소를 입력한 후 목록에서 <connect to new host ...> 선택
+- Verify host identification 창이 표시되면 ok 선택
+- 연결 창에 Username과 Password에 모두 tos을 입력 한 후 Ok 선택
+  - Auto streaming 창이 표시되면 Dont't show.. 체크 후 Ok 선택
+  - Display resolution 창이 표시되면 Dont't show.. 체크와 하단에서 resize remote display 선택 후 Ok 선택
+
+4. 화면 해상도를 설정를 설정합니다.   
+- 마우스를 화면 오른쪽 상단 끝으로 이동하면 페이지 넘김이 표시되는데, 이를 클릭해 설정 화면으로 이동
+- 아이콘 목록에서 Display 선택
+  - Resize remote display를 선택한 후 오른쪽 끝 Change settings 선택
+  - Resolution을 1024x600으로 변경 후 Modify 선택
+- 왼쪽 상단 뒤로 가기 버튼을 처음 화면이 표시될 때까지 누름
+
+rpi에 X 서버가 실행 중일 때만 PC에서 nomachine 클라이언트로 rpi에 접속할 수 있습니다.
+nomachine 서버는 systemd 서비스로 관리하므로 rpi를 다시 시작하면 자동으로 실행됩니다. 
