@@ -573,7 +573,7 @@ cd /usr/share/**<TAB>
 ```sh
 kill -9 <TAB>
 ```
-<\details>
+</details>
 
 ### oh-my-zsh
 oh-my-zsh은 zsh을 위한 오픈소스 프레임워크입니다. zsh는 강력하고 유연한 쉘이지만, 설정 및 관리가 복잡할 수 있습니다. oh-my-zsh은 이러한 zsh의 설정을 쉽게 관리하고, 다양한 플러그인과 테마를 제공하여 사용자 경험을 향상시키는 역할을 합니다.
