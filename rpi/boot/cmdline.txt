@@ -1,1 +1,1 @@
-console=serial0,115200 console=tty1 root=PARTUUID=7c893102-02 rootfstype=ext4 logo.nologo vt.global_cursor_default=0 plymouth.ignore-serial-consoles fsck.repair=yes rootwait cfg80211.ieee80211_regdom=GB
+console=serial0,115200 console=tty1 root=PARTUUID=a3f161f3-02 rootfstype=ext4 fsck.repair=yes rootwait quiet init=/usr/lib/raspberrypi-sys-mods/firstboot cfg80211.ieee80211_regdom=GB systemd.run=/boot/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target ip=192.168.101.101
