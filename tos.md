@@ -4,6 +4,9 @@
 rpi는 fat32 형식의 부트 파일 시스템과 ext4 형식의 리눅스 루트 파일 시스템으로 구성됩니다.
 부트 파일 시스템인 /boot는 윈도우 PC에서 접근 가능합니다. 
 
+<details>
+<summary>rpi 부트 파일 시스템</summary>
+  
 boot의 역할은 다음과 같습니다.  
 
 - 부팅 프로세스 시작: 라즈베리 파이에 전원이 공급되면 GPU가 부트 파일 시스템에서 필요한 파일들을 로드하여 부팅 프로세스 시작
@@ -22,6 +25,8 @@ boot에 포함된 핵심 파일의 의미입니다.
 - bootcode.bin: GPU 부트 로더 파일로, start.elf를 로드하고 실행 역할
 - fixup.dat: GPU 펌웨어 패치 파일로, 특정 하드웨어 문제를 해결하거나 기능을 추가하기 위해 사용
 - overlays: 장치 트리 오버레이 파일들을 저장하는 디렉터리. 특정 하드웨어 기능을 활성화하거나 설정을 변경하기 위해 사용
+</details>  
+
 
 다음과 같이 윈도우 PC의 파워쉘에서 부트 파일 시스템의 설정 파일을 수정합니다.
 
@@ -30,26 +35,41 @@ boot에 포함된 핵심 파일의 의미입니다.
 winget install --id GNU.Wget2
 ```
 
-2. T-Flash의 부트 파일 시스템 경로(D:)로 이동해 기존 설정 파일을 삭제합니다.
+2. Raspberry Pi Imager로 T-Flash 카드(이하 T-Flash)에 이미지를 설치합니다.
+- OS는 Rsaspberry Pi OS (other) > Raspberry Pi OS Lite (64-bit)를 선택합니다.
+- id는 tos, 호스트 이름은 toheaven으로 가정합니다.
+
+3. 설치가 완료되면 T-Flash의 부트 파일 시스템 경로(D:)로 이동해 기존 설정 파일을 삭제합니다.
 ```sh
 cd D:
 del cmdline.txt
 del config.txt
 ```
 
-3. 새로운 설정 파일을 다운로드 합니다.
+4. 새로운 설정 파일을 다운로드 합니다.
+- cmdline.txt에는 이더넷 주소를 192.168.101.101로 설정하는 커널 옵션이 포함되어 있습니다.
+
 ```sh
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/cmdline.txt
 wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/config.txt
-wget2 https://github.com/PlanXStudio/tos/raw/main/rpi/boot/userconf.txt
 ```
 
-4. SSH 서버 실행을 위해 새 파일을 만듦니다.
-```
-New-Item -ItemType File -Path ssh
+5. T-Flash를 rpi에 삽입한 후 전원을 공급해 부팅합니다.
+
+6. 약 1분 30초 후 PC와 rpi를 이더넷 케이블로 연결합니다.
+
+7. rpi에 접속할 수 있도록 PC의 이더넷 주소를 192.168.101.120 등으로 설정합니다.
+- <WIN><r> > ncpa.cpl > 이더넷 어댑터 > IPv4 속성
+
+8. rpi에 ping 테스트를 수행해 봅니다.
+```sh
+ping 192.168.101.101
 ```
 
-5. T-Flash 카드를 rpi에 삽입한 후 전원을 공급해 부팅합니다.
+- 만약 응답이 없다면 IP 주소 대신 호스트 이름을 이용(toheaven.local)합니다.
+```sh
+ping tos.local
+```
 
 ## SSH 키 생성
 SSH 통신에 필요한 비대칭 키를 생성한 후 하나(private)는 PC, 나머지(public)는 rpi에 복사하면 PC에서 rpi에 원격 접속할 때 fingerprint 생성과 패스워드 요구를 생략합니다.
@@ -83,47 +103,145 @@ dir .ssh/*
 -a---      2024-04-05   오후 1:56            734   id_rsa.pub
 ```
 
-6. scp 명령을 이용해 PC에서 생성한 public 키를 rpi의 IP 주소와 id를 이용해 복사합니다.
+6. scp 명령을 이용해 PC에서 생성한 public 키를 rpi의 IP 주소와 id를 이용해 복사합니다. authorized_keys는 키를 보관하는 일종의 지갑입니다.
 ```sh
-scp .ssh/id_rsa.pub pi@192.168.101.101:~/.ssh/authorized_keys
-```
-- rpi의 홈 폴더에도 .ssh 폴더가 존재하며, authorized_keys는 키를 보관하는 일종의 지갑
+ssh tos@192.168.101.101 mkdir -p ~/.ssh
 
-7. rpi의 패스워드는 raspberry입니다.
+scp .ssh/id_rsa.pub tos@192.168.101.101:~/.ssh/authorized_keys
+```
+
+7. rpi에 로그인합니다.
+```sh
+ssh tos@192.168.101.101
+```
+
+## 패키지 정리
+
+1. 패키지 정리 스크립트를 작성합니다.
+```sh
+vi rpi4-lite-pkg
+```
+```in
+#!/bin/bash
+
+PKG_LIST=" \
+  avahi-daemon \
+  bash-completion \
+  cifs-utils \
+  dc \
+  dmidecode \
+  dos2unix \
+  dosfstools \
+  ed \
+  eject \ 
+  fakeroot \
+  fbset \
+  firmware-atheros \
+  firmware-libertas \
+  firmware-misc-nonfree \
+  firmware-realtek \
+  gdisk \
+  iptables \
+  kbd \
+  keyboard-configuration \
+  keyutils \
+  linux-headers-* \
+  linux-kbuild-* \
+  lua5.1 \
+  luajit \
+  manpages* \
+  media-types \
+  nano \
+  nftables \ 
+  p7zip* \
+  parted \
+  pi-bluetooth \
+  triggerhappy \
+  xkb-data \
+  vim-*
+  zstd \
+"
+
+FILE_LIST=" \
+  /var/lib/apt/lists/* \
+  /var/cache/debconf/*-old \
+  /var/lib/dpkg/*-old \
+  /var/log/* \
+  /var/tmp/* \
+  /var/swap/* \
+  /tmp/* \
+  /usr/games \
+  /usr/share/locale \
+  /usr/share/doc \
+  /usr/share/man \
+  /usr/share/terminfo \
+  /usr/share/icons \
+  /usr/share/pixmaps \
+  /usr/share/menu \
+  /usr/share/applications \
+  /usr/local/games \
+  /usr/local/man \
+  /usr/local/share/man \
+  /etc/xdg \
+"
+
+echo "===================="
+echo "Package Cleaning"
+echo "===================="
+
+apt purge -y ${PKG_LIST}
+apt autoremove
+
+echo "==================="
+echo "ReInstall Package"
+echo "==================="
+
+apt update
+yes | apt -y upgrade
+
+apt -y install vim git
+
+echo "==================="
+echo "FileSystem Cleaning"
+echo "==================="
+
+rm -rf ${FILE_LIST}
+```
+
+2. 실행 권한을 부여한 후 root 권한으로 실행합니다.
+
+```sh
+chmod 755 rpi4-lite-pkg
+sudo ./rpi4-lite-pkg
+```
+
+3. 결과를 확인합니다.
+```sh
+df -h
+```
 ```out
-pi@192.168.101.101's password: raspberry
-id_rsa.pub      
+ilesystem      Size  Used Avail Use% Mounted on
+udev            1.6G     0  1.6G   0% /dev
+tmpfs           380M  5.9M  374M   2% /run
+/dev/mmcblk0p2   59G  1.7G   54G   4% /
+tmpfs           1.9G     0  1.9G   0% /dev/shm
+tmpfs           5.0M   16K  5.0M   1% /run/lock
+/dev/mmcblk0p1  510M   64M  447M  13% /boot/firmware
+tmpfs           380M     0  380M   0% /run/user/1000
 ```
 
-## 호스트 이름 변경
-호스트 이름은 리눅스 장치를 식별하는 문자열입니다. 가급적 다른 장치와 구분되는 고유한 이름을 사용하는 것이 좋습니다.
-현재 호스트 이름 확인과 변경 모두 hostname 또는 hostnamectl 명령을 사용합니다. 
-hostnamectl으로 호스트 이름을 바꾸면 /etc/hostname 파일 내용도 함께 바뀌지만, 이 파일을 직접 수정할 때와 달리 시스템 재 시작을 요구하지 않습니다.
+## vim 설정 
 
-1. 현재 호스트 이름을 확인합니다.
-```sh
-hostnamectl
-```
+<details>
+<summary>vim 기본 사용법</summary>
 
-2. 호스트 이름을 바꿉니다. 호스트 이름은 고유한 것이 좋으므로 여러 대의 rpi를 사용할 때는 접미사로 -01과 같은 일련번호를 붙힐 것을 권장합니다. (예: toheavn-01)
-```sh
-sudo hostnamectl set-hostname toheavn
-```
-
-3. 바뀐 이름을 확인해 봅니다. (프롬프트에 표시되는 호스트 이름은 다시 원격 접속하면 바뀝니다.)
-```sh
-hostnamectl
-cat /etc/hostname
-```
-
-## vim 기본 사용법
 vim은 텍스트 편집기인 vi를 개선한 대표적인 리눅스 편집기로 명령어를 통해 텍스트를 효율적으로 편집하고 탐색하는 명령 모드와 일반적인 텍스트 편집기처럼 텍스트를 입력하는 입력 모드를 구분하여 사용합니다. 매크로를 비롯해 정규 표현식, 텍스트 객체, 플러그인 등 다양한 기능을 제공하여 복잡한 편집 작업을 효율적으로 수행할 수 있도록 도와줍니다.
 
 ```sh
 vi
 ```
 
-본 강좌에서 진행되는 모든 파일 편집은 vim을 사용하므로 다음 내용만이라도 숙지한다면, 편리하게 작업을 완료할 수 있습니다.
+모든 파일 편집은 vim을 사용하므로 다음 내용만이라도 숙지한다면, 편리하게 작업을 완료할 수 있습니다.
 
 1. vim은 다음과 같이 4가지 모드가 있습니다.
 - Normal 모드: 커서 이동, 명령 입력 (기본 모드)
@@ -183,24 +301,25 @@ vi
 ```sh
 vimtutor
 ```
+</details>
 
-### vim 설정
+
 vim은 vimrc(또는 .vimrc) 파일을 통해 사용자의 취양에 맞게 vim의 동작 방식과 외관을 자유롭게 설정할 수 있습니다.  
 vim은 설치되어 있으므로 설정 파일을 다운로드해 적용합니다.
 
-1. /etc 경로에 vim 폴더를 만듧니다.
+1. /etc 경로에 vim 폴더를 만듧니다. 만약 /etc/vim 폴더가 존재한다면 삭제한 후 다시 만듦니다.
 ```sh
-sudo mkdir -p /etc/vim
+sudo mkdir /etc/vim
 ```
 
 2. 사전 설정 파일인 vimrc를 다운로드 합니다.
 ```sh
-sudo wget https://github.com/PlanXStudio/tos/raw/main/etc/vim/vimrc /etc/vim
+sudo wget https://github.com/PlanXStudio/tos/raw/main/etc/vim/vimrc -O /etc/vim/vimrc
 ```
 
 3. 플러그인 관리자인 Vundle을 다운로드 합니다.
 ```sh
-sudo git clone https://github.com/VundleVim/Vundle.vim.git /etc/vim/bundle/Vundle.vim
+sudo git clone https://github.com/VundleVim/Vundle.vim.git -O  /etc/vim/bundle/Vundle.vim
 ```
 
 4. root 권한으로 vi를 실행합니다. 
@@ -208,20 +327,21 @@ sudo git clone https://github.com/VundleVim/Vundle.vim.git /etc/vim/bundle/Vundl
 sudo vi
 ```
 
-오류 메시지가 출력되는데, \<Enter>를 누릅니다.
+5. 오류 메시지가 출력되는데, \<Enter>를 누릅니다.
 ```out
 Error detected while processing VimEnter Autocommands for "*":
 E185: Cannot find color scheme 'gruvbox'
 Press ENTER or type command to continue
 ```
 
-5. Command-line에서 다음과 같이 플러그인 설치 명령을 실행합니다.
+6. Command-line에서 다음과 같이 플러그인 설치 명령을 실행합니다.
 ```
 PluginInstall
 ```
 
-6. 모든 플러그인 설치가 완료되면 vim을 종료합니다.
-
+<details>
+<summary>사전 설정 내용</summary>
+  
 - 터미널의 색상 기능을 지원하는 경우, 24비트 색상을 사용하도록 설정
 - 구문 강조 기능 활성화 (파일 형식에 따라 코드를 색상으로 구분)
 - 명령어 히스토리를 256개까지 저장 (이전에 입력한 명령어를 빠르게 불러와 재사용)
@@ -249,199 +369,7 @@ PluginInstall
 - 터미널 모드에서 \<Ctrl>+\<R>을 눌렀을 때 특수 문자를 입력할 수 있도록 설정
 - \<Alt>+\<방향키>를 사용하여 창 또는 패널 사이 이동
 - Python 파일을 편집할 때 \<Ctrl>+\<F5>를 눌러 현재 파일 저장, 실행
-
-## MOTD(message of the day) 비활성화
-motd는 로그온 한 사용자에게 도움말이나 시스템 패키지 업데이트 유무 등을 표시하는 서비스입니다. 
-더 이상 이런 메시지를 표시하지 않게하려면 /etc/pam.d 경로의 login과 sshd에서 해당 서비스를 비활성화하면 됩니다.
-
-1. vi로 /etc/pam.d 경로의 login 파일을 엶니다.
-```sh
-sudo vi /etc/pam.d/login
-```
-
-2. 파일이 열리면 커서를 이용해 다음 줄로 이동합니다. 
-```sh
-session    optional   pam_motd.so motd=/run/motd.dynamic
-session    optional   pam_motd.so noupdate
-```
-
-3. 줄 앞에 #을 추가해 비활성화 합니다.
-```sh
-#session    optional   pam_motd.so motd=/run/motd.dynamic
-#session    optional   pam_motd.so noupdate
-```
-
-4. \<ESC>를 눌러 명령 모드로 바꾼 후 \<:> \<x> \<Enter>를 차례로 눌러 저장 및 종료합니다.
-
-5. 한번 더 관리자 권한의 vi로 /etc/pam.d 경로의 sshd 파일을 엶니다.
-```sh
-sudo vi /etc/pam.d/sshd
-```
-
-6. 앞서 진행한 2 ~ 4를 수행합니다.
-
-## 패키지 제거
-제거하는 패키지 중 일부는 다른 패키지를 함께 제거하기도 하고, 존재하는 패키지의 의존성 문제를 해결하기 위해 대체 패키지를 추가로 설치하기도 합니다. 따라서 패키지의 의미와 의존성을 확인한 후 신중하게 제거합니다.
-
-1. 설치된 패키지를 확인합니다.
-```sh
-dpkg -l
-```
-
-2. 패키지에 대한 도움말은 gemini와 같은 LLM을 활용합니다.
-```sh
-https://gemini.google.com/
-```
-
-3. 제거할 목록을 작성합니다.
-```sh
-export PKG_LIST=" \
-  bash-completion \
-  bind9-host \
-  bsdmainutils \
-  build-essential \
-  busybox \
-  cifs-utils \
-  console-setup-linux \
-  cpp* \
-  debconf-i18n \
-  dmidecode \
-  dosfstools \
-  dphys-swapfile \
-  ed \
-  fakeroot \
-  fbset \
-  firmware-atheros \
-  firmware-libertas \
-  firmware-misc-nonfree \
-  firmware-realtek \
-  gdb \
-  gdbm-l10n \
-  gpg \
-  gnupg-l10n \
-  gnupg-utils \
-  gpg-agent \
-  gpgconf \
-  iptables \
-  isc-dhcp-* \
-  kbd \
-  keyboard-configuration \
-  keyutils \
-  libapt-pkg5.0 \
-  libfreetype-dev \
-  libfreetype6 \
-  libisc-export1100 \
-  liblocale-gettext-perl \
-  libraspberrypi-dev \  
-  libraspberrypi-doc \
-  libreadline7 \
-  libpython2.7-* \
-  libpython3.7-* \
-  locales \
-  lua5.1 \
-  luajit \
-  man-db \
-  manpages* \
-  media-types \
-  mime-support \
-  nano \
-  ntfs-3g \
-  parted \
-  pinentry-curses \
-  python2.7-* \
-  python3.7-* \
-  raspi-gpio \
-  raspberrypi-net-mods \
-  rpi.gpio-common:arm64 \
-  rng-tools \
-  shared-mime-info \
-  strace \
-  tasksel* \
-  triggerhappy \
-  vim-* \
-  xauth \
-  xdg-user-dirs \
-  xkb-data \
-"
-```
-
-4. 패키지를 제거합니다.
-```sh
-apt purge -y ${PKG_LIST}
-apt autoremove
-apt autoclean
-```
-
-## 새로운 사용자 계정 
-### root 계정 로그인 허용
-1. root 계정의 패스워드를 설정합니다.
-```sh
-sudo passwd root
-```
-
-보안 때문에 입력한 문자는 화면에 표시되지 않습니다. (root 패스워드는 #tos!로 가정합니다.)
-```out
-New password: #tos!<Enter>
-Retype new password: #tos!<Enter>
-passwd: password updated successfully
-```
-
-2. vi로 /etc/ssh/sshd_config 파일을 엶니다.
-```sh
-sudo vi /etc/ssh/sshd_config
-```
-
-3. 방향 키로 커서를 다음 위치로 옮깁니다.
-```sh
-#PermitRootLogin prohibit-password
-```
-
-4. \<i>를 눌러 입력 모드로 바꾼 후 다음과 같이 수정합니다.
-```sh
-PermitRootLogin yes
-```  
-  
-5. vi를 종료합니다.
-
-6. sshd 데몬을 다시 시작합니다.
-```sh
-sudo systemctl restart sshd
-```
-
-### 기존 계정 이름과 패스워드 변경
-pi 계정 이름을 tos로 변경해 봅니다.
-
-1. 모든 원격 접속을 끊고, root 계정으로 접속합니다.
-
-2. pi 계정으로 실행한 모든 프로세스를 종료합니다.
-```sh
-pkill -u pi
-```
-
-3. pi 계정 이름을 tos로 변경하는데, 홈 폴더 이름도 함께 변경합니다.
-```sh
-usermod -l tos pi -m -d /home/tos
-```
-
-4. 변경한 계정의 패스워드를 변경합니다. 
-```sh
-passwd tos
-```
-보안 때문에 입력한 문자는 화면에 표시되지 않습니다. (계정 이름과 같이 tos로 가정)
-```out
-New password: tos<Enter>
-Retype new password: tos<Enter>
-passwd: password updated successfully
-```
-
-5. 그룹 이름을 계정 이름 동일하게 변경합니다.
-```sh
-groupmod -n tos pi
-``` 
-
-이후부터는 이름과 패스워드가 바뀐 tos 계정으로 원격 접속합니다.
-
-
+</details>
 
 # CLI 환경 개선
 리눅스는 30년이 넘는 시간 동안 꾸준히 발전해 왔습니다. 오픈소스 기반의 운영체제인 리눅스는 개방성, 유연성, 안정성을 바탕으로 서버, 임베디드 시스템, 개인용 컴퓨터 등 다양한 분야에서 널리 사용되고 있습니다. 하지만 기술의 발전과 사용자의 요구 변화에 따라 기존 리눅스 툴의 한계를 지적하는 사용자도 많습니다.
@@ -508,7 +436,7 @@ sudo apt install tmux
 
 2. 사전 설정 파일인 tmux.conf를 다운로드 합니다.
 ```sh
-sudo wget https://github.com/PlanXStudio/tos/raw/main/etc/tmux.conf /etc
+sudo wget https://github.com/PlanXStudio/tos/raw/main/etc/tmux.conf -O /etc/tmux.conf
 ```
 
 3. 플러그인 관리자인 tpm을 다운로드 합니다.
@@ -546,6 +474,9 @@ Done, press ENTER to continue.
 exit
 ```
 
+<details>
+<summary>사전 설정 내용</summary>
+
 사전 설정 파일에 의한 tmux 적용 내용은 다음과 같습니다.
 - 이스케이프 키 입력 후 다음 명령 인식까지의 지연 시간을 10ms로 변경 (기본값은 500ms)
 - 마우스 모드 활성화해 창, 패널 클릭 및 패널 크기 조정 가능. 마우스 우 클릭으로 팝업 메뉴 실행
@@ -567,7 +498,9 @@ exit
 - \<L>을 눌러 마지막으로 사용한 창 열기
 - 마우스 휠 스크롤 시 패널 내용을 스크롤하거나 복사 모드 시작
 - \<Home>은 커서를 줄 맨 앞으로 이동, \<End>는 줄 맨 뒤로 이동하도록 설정
+<\details>
 
+  
 만약 프리픽스를 \<Ctrl>+\<b> 대신 \<`>로 바꾸고 싶으면 vi로 tmux.conf를 열고 다음 부분의 주석(#)을 제거합니다.
 ```sh
 unbind C-b
@@ -599,7 +532,7 @@ rm fzf-*.gz
 
 3. /usr/bin 경로로 옮깁니다.
 ```sh
-sudo mf fzf /usr/bin
+sudo mv fzf /usr/bin
 ```
 
 4. fzf 옵션 설정을 위해 vi로 zshrc를 엶니다.
@@ -619,6 +552,9 @@ export FZF_DEFAULT_OPTS="--layout=reverse --tmux 90%,60% --border horizontal"
 source /etc/zsh/zshrc
 ```
 
+<details>
+<summary>oh-my-zsh 설치 후 동작</summary>
+
 oh-my-zsh에는 fzf 플러그인이 내장되어, 설치가 완료되면 단추키를 통해 다음 기능을 사용할 수 있습니다.
 
 - \<Ctrl>\<r>: fzf가 히스토리 표시
@@ -637,6 +573,7 @@ cd /usr/share/**<TAB>
 ```sh
 kill -9 <TAB>
 ```
+<\details>
 
 ### oh-my-zsh
 oh-my-zsh은 zsh을 위한 오픈소스 프레임워크입니다. zsh는 강력하고 유연한 쉘이지만, 설정 및 관리가 복잡할 수 있습니다. oh-my-zsh은 이러한 zsh의 설정을 쉽게 관리하고, 다양한 플러그인과 테마를 제공하여 사용자 경험을 향상시키는 역할을 합니다.
@@ -703,9 +640,6 @@ source $ZSH/oh-my-zsh.sh
 5. vi를 종료합니다.
 
 7. powrlevel10k를 zsh 테마로 지정한 후 설정 마법사를 실행하기 위해 원격 접속을 닫은 후 다시 연결합니다.
-```sh
-exit
-```
 
 8. 설정 마법사가 실행되면 다음과 같이 설정합니다.
 ```sh
@@ -766,8 +700,6 @@ p10k configure
 
 ## 기본 툴 대체
 ### ls 대체 eza(exa fork)
-![exa](res/exa.png)
-
 1. 다음 사이트에서 최신 버전을 확인합니다.
 ```sh
 https://github.com/eza-community/eza/releases
@@ -808,9 +740,6 @@ sudo rm /bin/dir
 ```
 
 ### cat 대체 bat
-![bat](res/bat.png)
-
-
 1. 다음 사이트에서 최신 버전을 확인합니다.
 ```sh
 https://github.com/sharkdp/bat/releases
@@ -837,13 +766,12 @@ sudo vi /etc/zsh/zshrc
 
 5. 다음과 같이 별칭을 추가합니다.
 ```sh
-alias cat='bat'
+alias cat='bat --color=always'
 ```
 
 6. vi를 종료합니다.
 
 ### du 대체 dust
-![dust](res/dust.png)
 
 1. 다음 사이트에서 최신 버전을 확인합니다.
 ```sh
@@ -877,7 +805,6 @@ alias du='dust'
 6. vi를 종료합니다.
 
 ### tree 대체 broot
-![broot](res/broot.png)
 
 1. 다음 사이트에서 최신 버전을 확인합니다.
 ```sh
@@ -911,8 +838,6 @@ alias tree='broot -p -s'
 6. vi를 종료합니다.
 
 ### ping 대체 gping
-![gping](res/gping.png)
-
 
 1. 다음 사이트에서 최신 버전을 확인합니다.
 ```sh
@@ -1043,7 +968,6 @@ alias od='hexyl'
 ```
 
 6. vi를 종료합니다.
-
 
 ### zshrc 소싱
 /etc/zsh/zshrc를 수정한 후 이를 zsh에 반영하려면 시스템을 재 시작하거나 현재 zsh에 소싱하면 됩니다.
