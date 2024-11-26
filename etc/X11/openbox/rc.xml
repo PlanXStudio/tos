@@ -37,13 +37,13 @@
     </font>
     <font place="MenuHeader">
       <name>0xProto Nerd Font Propo</name>
-      <size>9</size>
+      <size>12</size>
       <weight>Normal</weight>
       <slant>Normal</slant>
     </font>
     <font place="MenuItem">
       <name>0xProto Nerd Font Propo</name>
-      <size>9</size>
+      <size>12</size>
       <weight>Normal</weight>
       <slant>Normal</slant>
     </font>
@@ -55,7 +55,7 @@
     </font>
     <font place="InactiveOnScreenDisplay">
       <name>0xProto Nerd Font Propo</name>
-      <size>9</size>
+      <size>12</size>
       <weight>Bold</weight>
       <slant>Normal</slant>
     </font>
@@ -424,7 +424,6 @@
     </context>
   </mouse>
   <menu>
-    <file>/var/lib/openbox/debian-menu.xml</file>
     <file>menu.xml</file>
     <hideDelay>200</hideDelay>
     <middle>no</middle>
